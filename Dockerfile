@@ -1,17 +1,23 @@
-FROM debian:jessie
-MAINTAINER leejoneshane@gmail.com
+FROM debian:bullseye
+MAINTAINER joakim.s@webbkontakt.net
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV LANG zh_TW.UTF-8
-ENV LANGUAGE zh_TW.utf-8
-ENV LC_ALL zh_TW.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.utf-8
+ENV LC_ALL en_US.UTF-8
 
-RUN echo "zh_TW.UTF-8 UTF-8" > /etc/locale.gen \
-    && apt-get update \
-    && apt-get -y --no-install-recommends install locales wget curl gnupg apt-utils dialog \
-    && echo "deb http://free.nchc.org.tw/drbl-core drbl stable" >> /etc/apt/sources.list \
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
+    && apt-get --fix-missing update \
+    && apt-get -y --no-install-recommends install wget gnupg libnss3 \
+    && echo "deb http://free.nchc.org.tw/debian/ bullseye main" >> /etc/apt/sources.list \
     && wget -q http://drbl.nchc.org.tw/GPG-KEY-DRBL -O- | apt-key add - \
-    && apt-get update \
+    && mkdir -p /run/sendsigs.omit.d \
+    && apt-get -y install drbl clonezilla partclone ipxe lzop pigz pbzip2 udpcast
+RUN apt-get clean all
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
+    && locale-gen "en_US.UTF-8" \
+    && dpkg-reconfigure locales
+RUN /usr/sbin/drbl4imp -e -b -p 40
     && echo "\n" | apt-get -y --no-install-recommends install zip unzip bzip2 pigz rsync disktype parted pciutils tcpdump \
                   net-tools bc gawk hdparm sdparm netcat file ethtool etherwake ssh syslinux isolinux pxelinux mtools \
                   reiserfsprogs psmisc binutils fonts-wqy-zenhei hime txt2html dosfstools tftpd-hpa \
@@ -37,4 +43,9 @@ RUN echo "zh_TW.UTF-8 UTF-8" > /etc/locale.gen \
 
 VOLUME ["/tftpboot", "/home/partimag"]
 EXPOSE 68/udp 111/udp 2049/tcp
-CMD ["drbl-all-service start"]
+#CMD ["drbl-all-service start"]
+CMD ["drbl-all-service", "start"]
+#CMD ["drbl4imp -e -b -p 40"]
+#CMD ["/usr/sbin/drbl4imp -e -b -p 40"]
+#CMD ["/usr/sbin/drbl4imp","-e","-b","-p 40"]
+#CMD = ["/usr/sbin/drblpush", "-i"]
